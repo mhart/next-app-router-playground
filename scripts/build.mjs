@@ -30,14 +30,29 @@ const nextConfigStr = readFileSync(APP_BASE_DIR + '/server.js', 'utf8').match(
   /const nextConfig = ({.+?})\n/,
 )[1];
 
+let cacheEntries = Object.create(null);
+
 // Uncomment this to populate cache entries:
 
-// const cacheEntries = globSync(`${BASE_DIR}/cache/fetch-cache/*`).reduce((acc, file) => {
-//   acc[file.replace(REPO_ROOT, '')] = readFileSync(file, 'utf-8');
-//   return acc;
-// }, {});
+// cacheEntries = globSync(`${BASE_DIR}/cache/fetch-cache/*`).reduce(
+//   (acc, file) => {
+//     acc[file.replace(REPO_ROOT, '')] = readFileSync(file, 'utf-8');
+//     return acc;
+//   },
+//   cacheEntries,
+// );
 
-const cacheEntries = {};
+const cacheFileGlobs = [
+  `${NEXT_SERVER_DIR}/app/**/*.html`,
+  `${NEXT_SERVER_DIR}/app/**/*.rsc`,
+  `${NEXT_SERVER_DIR}/app/**/*.meta`,
+];
+for (const cacheFileGlob of cacheFileGlobs) {
+  cacheEntries = globSync(cacheFileGlob).reduce((acc, file) => {
+    acc[file.replace(APP_BASE_DIR, '')] = readFileSync(file, 'utf-8');
+    return acc;
+  }, cacheEntries);
+}
 
 let replaceRelativePlugin = {
   name: 'replaceRelative',
@@ -331,6 +346,12 @@ contents = contents.replace(
 contents = contents.replace(
   /result = await this.renderHTML\(.+?\);/,
   'result = { metadata: { isNotFound: true } };',
+);
+
+// Try to use incremental cache
+contents = contents.replace(
+  'cachedResponse = !this.minimalMode',
+  'cachedResponse = true',
 );
 
 writeFileSync(OUTFILE, contents);
