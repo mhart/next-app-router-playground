@@ -43,6 +43,7 @@ export default {
 
     const resBody = new TransformStream();
     const writer = resBody.writable.getWriter();
+    let resBodyWritten = false;
 
     const reqBodyNodeStream = request.body
       ? Readable.fromWeb(request.body as any)
@@ -54,8 +55,23 @@ export default {
       headers: Object.fromEntries([...request.headers]),
       bodyReadable: reqBodyNodeStream,
       resWriter: (chunk) => {
+        resBodyWritten = true;
         writer.write(chunk).catch(console.error);
         return true;
+      },
+    });
+
+    // Should add this to the mock implementation – only modify statusCode if not sent
+    (res as any)._statusCode = res.statusCode;
+    Object.defineProperty(res, 'statusCode', {
+      get: function () {
+        return this._statusCode;
+      },
+      set: function (val) {
+        if (this.finished || this.headersSent) {
+          return;
+        }
+        this._statusCode = val;
       },
     });
 
@@ -81,7 +97,7 @@ export default {
 
     await Promise.race([res.headPromise, headPromise]);
 
-    return new Response(resBody.readable, {
+    return new Response(resBodyWritten ? resBody.readable : null, {
       status: res.statusCode,
       headers: (res as any).headers,
     });
