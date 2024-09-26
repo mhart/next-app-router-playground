@@ -1,11 +1,18 @@
 #:schema node_modules/wrangler/config-schema.json
 name = "playground-node"
 main = ".next/standalone/worker.mjs"
-assets = ".next/assets"
-compatibility_date = "2024-07-01"
-compatibility_flags = ["experimental:nodejs_compat_v2"]
+compatibility_date = "2024-09-26"
+compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 minify = true
+
+[assets]
+directory = ".next/assets"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "de7a91a8c96a4cd8bed7231904b5e6f3"
 
 [alias]
 "critters" = "./scripts/shim-throw.mjs"
