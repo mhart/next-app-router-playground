@@ -9,7 +9,8 @@
     "prettier": "prettier --write --ignore-unknown .",
     "prettier:check": "prettier --check --ignore-unknown .",
     "start": "next start",
-    "test": "pnpm prettier:check && pnpm lint"
+    "test": "pnpm prettier:check && pnpm lint",
+    "deploy": "gcloud run deploy app-router --allow-unauthenticated --source ."
   },
   "git": {
     "pre-commit": "lint-staged"
